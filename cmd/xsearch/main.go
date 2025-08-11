@@ -13,12 +13,25 @@ import (
 	"github.com/mattn/go-xsearch"
 )
 
+const name = "xsearch"
+
+const version = "0.0.0"
+
+var revision = "HEAD"
+
 func main() {
 	var asjson bool
 	var latestTweetId string
+	var showVersion bool
 	flag.BoolVar(&asjson, "json", false, "Output as JSON")
 	flag.StringVar(&latestTweetId, "latestTweetId", "", "Latest Tweet ID")
+	flag.BoolVar(&showVersion, "v", false, "Show version")
 	flag.Parse()
+
+	if showVersion {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 	if flag.NArg() == 0 {
 		flag.Usage()
 		os.Exit(1)
