@@ -67,8 +67,30 @@ type payload struct {
 	Timeline Timeline `json:"timeline"`
 }
 
-func Search(word string) ([]Entry, error) {
-	req, err := http.NewRequest(http.MethodGet, `https://search.yahoo.co.jp/realtime/api/v1/pagination?p=`+url.QueryEscape(word), nil)
+type opt struct {
+	latestTweetId string
+}
+
+type option func(*opt)
+
+type Options []option
+
+func WithLastTweetId(id string) option {
+	return func(o *opt) {
+		o.latestTweetId = id
+	}
+}
+
+func Search(word string, options ...option) ([]Entry, error) {
+	var o opt
+	for _, option := range options {
+		option(&o)
+	}
+	urlstring := `https://search.yahoo.co.jp/realtime/api/v1/pagination?p=` + url.QueryEscape(word)
+	if o.latestTweetId != "" {
+		urlstring += `&latestTweetId=` + url.QueryEscape(o.latestTweetId)
+	}
+	req, err := http.NewRequest(http.MethodGet, urlstring, nil)
 	if err != nil {
 		return nil, err
 	}

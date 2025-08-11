@@ -15,11 +15,17 @@ import (
 
 func main() {
 	var asjson bool
+	var latestTweetId string
 	flag.BoolVar(&asjson, "json", false, "Output as JSON")
+	flag.StringVar(&latestTweetId, "latestTweetId", "", "Latest Tweet ID")
 	flag.Parse()
 	if flag.NArg() == 0 {
 		flag.Usage()
 		os.Exit(1)
+	}
+	var options search.Options
+	if latestTweetId != "" {
+		options = append(options, search.WithLastTweetId(latestTweetId))
 	}
 	word := strings.Join(flag.Args(), " ")
 	entries, err := search.Search(word)
