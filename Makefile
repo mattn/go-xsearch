@@ -18,15 +18,15 @@ install:
 
 .PHONY: show-version
 show-version: $(GOBIN)/gobump
-	gobump show -r .
+	gobump show -r ./cmd/xsearch
 
 $(GOBIN)/gobump:
 	go install github.com/x-motemen/gobump/cmd/gobump@latest
 
 .PHONY: cross
 cross: $(GOBIN)/goxz
-	goxz -n $(BIN) -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) .
-	goxz -n $(BIN) -arch arm -os linux -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) .
+	goxz -n $(BIN) -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) ./cmd/xsearch
+	goxz -n $(BIN) -arch arm -os linux -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) ./cmd/xsearch
 
 $(GOBIN)/goxz:
 	go install github.com/Songmu/goxz/cmd/goxz@latest
