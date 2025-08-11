@@ -48,7 +48,7 @@ endif
 ifneq ($(shell git rev-parse --abbrev-ref HEAD),main)
 	$(error current branch is not main)
 endif
-	@gobump up -w .
+	@gobump up -w ./cmd/xsearch
 	git commit -am "bump up version to $(VERSION)"
 	git tag "v$(VERSION)"
 	git push origin main
