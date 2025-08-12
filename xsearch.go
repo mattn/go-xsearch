@@ -75,7 +75,7 @@ type option func(*opt)
 
 type Options []option
 
-func WithLastTweetId(id string) option {
+func WithLatestTweetId(id string) option {
 	return func(o *opt) {
 		o.latestTweetId = id
 	}
