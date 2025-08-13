@@ -9,7 +9,6 @@ import (
 	"os"
 	"regexp"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/dghubble/oauth1"
@@ -61,10 +60,9 @@ func main() {
 	}
 
 	first := true
-	re := regexp.MustCompile(`\tSTART\t[^\t]+\tEND\t`)
 	latestTweetId := ""
 	for {
-		entries, err := xsearch.Search(filter, xsearch.WithLatestTweetId(latestTweetId))
+		entries, err := xsearch.Search(filter, xsearch.WithLatestTweetId(latestTweetId), xsearch.WithRemoveMarker(true))
 		if err != nil {
 			log.Println(err)
 			continue
@@ -74,14 +72,10 @@ func main() {
 			return entries[i].CreatedAt < entries[j].CreatedAt
 		})
 		for _, entry := range entries {
-			text := re.ReplaceAllStringFunc(entry.DisplayTextBody, func(s string) string {
-				return strings.TrimSuffix(strings.TrimPrefix(s, "\tSTART\t"), "\tEND\t")
-			})
-
-			if filterRe != nil && !filterRe.MatchString(text) {
+			if filterRe != nil && !filterRe.MatchString(entry.DisplayTextBody) {
 				continue
 			}
-			fmt.Println(entry.ID, entry.ScreenName, text)
+			fmt.Println(entry.ID, entry.ScreenName, entry.DisplayTextBody)
 			latestTweetId = entry.ID
 
 			if first == false && reply != "" {

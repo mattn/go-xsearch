@@ -4,7 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 )
+
+var reMarker = regexp.MustCompile(`\tSTART\t[^\t]+\tEND\t`)
 
 type Head struct {
 	TotalResultsAvailable int `json:"totalResultsAvailable"`
@@ -69,6 +73,8 @@ type payload struct {
 
 type opt struct {
 	latestTweetId string
+	removeMarker  bool
+	userAgent     string
 }
 
 type option func(*opt)
@@ -79,6 +85,24 @@ func WithLatestTweetId(id string) option {
 	return func(o *opt) {
 		o.latestTweetId = id
 	}
+}
+
+func WithRemoveMarker(removeMarker bool) option {
+	return func(o *opt) {
+		o.removeMarker = removeMarker
+	}
+}
+
+func WithUserAgent(userAgent string) option {
+	return func(o *opt) {
+		o.userAgent = userAgent
+	}
+}
+
+func normalizeText(s string) string {
+	return reMarker.ReplaceAllStringFunc(s, func(s string) string {
+		return strings.TrimSuffix(strings.TrimPrefix(s, "\tSTART\t"), "\tEND\t")
+	})
 }
 
 func Search(word string, options ...option) ([]Entry, error) {
@@ -94,7 +118,11 @@ func Search(word string, options ...option) ([]Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("User-Agent", "curl/8.9.1")
+	ua := o.userAgent
+	if ua == "" {
+		ua = "curl/8.9.1"
+	}
+	req.Header.Add("User-Agent", ua)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -103,6 +131,13 @@ func Search(word string, options ...option) ([]Entry, error) {
 	err = json.NewDecoder(resp.Body).Decode(&p)
 	if err != nil {
 		return nil, err
+	}
+
+	if o.removeMarker {
+		for _, e := range p.Timeline.Entry {
+			e.DisplayText = normalizeText(e.DisplayText)
+			e.DisplayTextBody = normalizeText(e.DisplayTextBody)
+		}
 	}
 	return p.Timeline.Entry, nil
 }

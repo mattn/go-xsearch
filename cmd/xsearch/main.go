@@ -38,7 +38,7 @@ func main() {
 	}
 	var options xsearch.Options
 	if latestTweetId != "" {
-		options = append(options, xsearch.WithLastTweetId(latestTweetId))
+		options = append(options, xsearch.WithLatestTweetId(latestTweetId))
 	}
 	word := strings.Join(flag.Args(), " ")
 	entries, err := xsearch.Search(word)
