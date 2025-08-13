@@ -28,6 +28,7 @@ func main() {
 	var pattern, filter, reply string
 	var from string
 	var clientToken, clientSecret, accessToken, accessSecret string
+	var duration time.Duration
 	flag.StringVar(&pattern, "pattern", "ぬるぽ", "Pattern")
 	flag.StringVar(&filter, "filter", "^ぬるぽ$", "Regexp filter")
 	flag.StringVar(&reply, "reply", "ｶﾞｯ", "Reply")
@@ -36,6 +37,7 @@ func main() {
 	flag.StringVar(&clientSecret, "client-secret", os.Getenv("REPLYBOT_CLIENT_SECRET"), "Twitter ClientSecret")
 	flag.StringVar(&accessToken, "access-token", os.Getenv("REPLYBOT_ACCESS_TOKEN"), "Twitter AccessToken")
 	flag.StringVar(&accessSecret, "access-secret", os.Getenv("REPLYBOT_ACCESS_SECRET"), "Twitter AccessSecret")
+	flag.DurationVar(&duration, "duration", 20*time.Second, "Duration")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose")
 
 	flag.Parse()
@@ -97,7 +99,7 @@ func main() {
 				}
 			}
 		}
-		time.Sleep(20 * time.Second)
+		time.Sleep(duration)
 		first = false
 	}
 }
