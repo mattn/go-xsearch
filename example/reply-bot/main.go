@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -28,6 +29,7 @@ func main() {
 	var from string
 	var clientToken, clientSecret, accessToken, accessSecret string
 	var duration time.Duration
+	var jsonOut bool
 	flag.StringVar(&pattern, "pattern", "ぬるぽ", "Pattern")
 	flag.StringVar(&filter, "filter", "^ぬるぽ$", "Regexp filter")
 	flag.StringVar(&reply, "reply", "ｶﾞｯ", "Reply")
@@ -37,6 +39,7 @@ func main() {
 	flag.StringVar(&accessToken, "access-token", os.Getenv("REPLYBOT_ACCESS_TOKEN"), "Twitter AccessToken")
 	flag.StringVar(&accessSecret, "access-secret", os.Getenv("REPLYBOT_ACCESS_SECRET"), "Twitter AccessSecret")
 	flag.DurationVar(&duration, "duration", 20*time.Second, "Duration")
+	flag.BoolVar(&jsonOut, "json", false, "Output JSON")
 	flag.BoolVar(&verbose, "verbose", false, "Verbose")
 
 	flag.Parse()
@@ -59,6 +62,7 @@ func main() {
 		}
 	}
 
+	jsonw := json.NewEncoder(os.Stdout)
 	first := true
 	latestTweetId := ""
 	for {
@@ -75,7 +79,11 @@ func main() {
 			if filterRe != nil && !filterRe.MatchString(entry.DisplayTextBody) {
 				continue
 			}
-			fmt.Println(entry.ID, entry.ScreenName, entry.DisplayTextBody)
+			if jsonOut {
+				jsonw.Encode(entry)
+			} else {
+				fmt.Println(entry.ID, entry.ScreenName, entry.DisplayTextBody)
+			}
 			latestTweetId = entry.ID
 
 			if first == false && reply != "" {
