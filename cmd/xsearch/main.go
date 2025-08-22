@@ -7,7 +7,9 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/mattn/go-xsearch"
@@ -22,9 +24,13 @@ var revision = "HEAD"
 func main() {
 	var asjson bool
 	var latestTweetId string
+	var loop bool
+	var duration time.Duration
 	var showVersion bool
 	flag.BoolVar(&asjson, "json", false, "Output as JSON")
 	flag.StringVar(&latestTweetId, "latestTweetId", "", "Latest Tweet ID")
+	flag.BoolVar(&loop, "loop", false, "Loop")
+	flag.DurationVar(&duration, "duration", 20*time.Second, "Duration")
 	flag.BoolVar(&showVersion, "v", false, "Show version")
 	flag.Parse()
 
@@ -36,30 +42,49 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	var options xsearch.Options
-	if latestTweetId != "" {
-		options = append(options, xsearch.WithLatestTweetId(latestTweetId))
-	}
-	if asjson {
-		options = append(options, xsearch.WithRemoveMarker(true))
-	}
 	word := strings.Join(flag.Args(), " ")
-	entries, err := xsearch.Search(word)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	if asjson {
-		json.NewEncoder(os.Stdout).Encode(entries)
-		return
-	}
-	re := regexp.MustCompile(`\tSTART\t[^\t]+\tEND\t`)
-	for _, entry := range entries {
-		text := entry.DisplayTextBody
-		text = re.ReplaceAllStringFunc(text, func(s string) string {
-			text = strings.TrimSuffix(strings.TrimPrefix(s, "\tSTART\t"), "\tEND\t")
-			return color.RedString(text)
+	jsonw := json.NewEncoder(os.Stdout)
+	first := true
+	for {
+		var options xsearch.Options
+		if latestTweetId != "" {
+			options = append(options, xsearch.WithLatestTweetId(latestTweetId))
+		}
+		if asjson {
+			options = append(options, xsearch.WithRemoveMarker(true))
+		}
+		entries, err := xsearch.Search(word, options...)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i].CreatedAt < entries[j].CreatedAt
 		})
-		fmt.Fprintln(color.Output, entry.ID, text)
+
+		if !first || !loop {
+			if asjson {
+				jsonw.Encode(entries)
+			} else {
+				re := regexp.MustCompile(`\tSTART\t[^\t]+\tEND\t`)
+				for _, entry := range entries {
+					text := entry.DisplayTextBody
+					text = re.ReplaceAllStringFunc(text, func(s string) string {
+						text = strings.TrimSuffix(strings.TrimPrefix(s, "\tSTART\t"), "\tEND\t")
+						return color.RedString(text)
+					})
+					fmt.Fprintln(color.Output, entry.ID, text)
+					latestTweetId = entry.ID
+				}
+			}
+		}
+
+		if !loop {
+			break
+		}
+
+		time.Sleep(duration)
+		first = false
 	}
 }
