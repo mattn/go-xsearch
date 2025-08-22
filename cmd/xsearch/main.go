@@ -65,7 +65,9 @@ func main() {
 
 		if !first || !loop {
 			if asjson {
-				jsonw.Encode(entries)
+				for _, entry := range entries {
+					jsonw.Encode(entry)
+				}
 			} else {
 				re := regexp.MustCompile(`\tSTART\t[^\t]+\tEND\t`)
 				for _, entry := range entries {
