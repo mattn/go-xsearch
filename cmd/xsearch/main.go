@@ -40,6 +40,9 @@ func main() {
 	if latestTweetId != "" {
 		options = append(options, xsearch.WithLatestTweetId(latestTweetId))
 	}
+	if asjson {
+		options = append(options, xsearch.WithRemoveMarker(true))
+	}
 	word := strings.Join(flag.Args(), " ")
 	entries, err := xsearch.Search(word)
 	if err != nil {
