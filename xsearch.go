@@ -141,3 +141,20 @@ func Search(word string, options ...option) ([]Entry, error) {
 	}
 	return p.Timeline.Entry, nil
 }
+
+// ExtractHashtags returns a slice of unique hashtags from the given entries.
+func ExtractHashtags(entries []Entry) []string {
+	hashtagSet := make(map[string]struct{})
+	for _, entry := range entries {
+		for _, h := range entry.Hashtags {
+			if tag, ok := h.(string); ok {
+				hashtagSet[tag] = struct{}{}
+			}
+		}
+	}
+	var hashtags []string
+	for tag := range hashtagSet {
+		hashtags = append(hashtags, tag)
+	}
+	return hashtags
+}
